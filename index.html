@@ -1,0 +1,185 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no" />
+<meta name="theme-color" content="#1a0a0a" />
+<title>タップ百人組手</title>
+<link href="https://fonts.googleapis.com/css2?family=Mochiy+Pop+P+One&family=Kosugi+Maru&display=swap" rel="stylesheet"/>
+<style>
+*{box-sizing:border-box}html,body{margin:0;padding:0;height:100%;overflow:hidden}
+body{font-family:"Kosugi Maru",system-ui,sans-serif;color:#fff;background:linear-gradient(180deg,#3a0010,#08010f);touch-action:manipulation;user-select:none;-webkit-tap-highlight-color:transparent}
+#app{display:flex;flex-direction:column;height:100dvh;padding:10px;gap:8px;max-width:480px;margin:0 auto}
+header{display:flex;justify-content:space-between;align-items:center}
+.title{font-family:"Mochiy Pop P One",sans-serif;font-size:20px;color:#ffe066;-webkit-text-stroke:3px #000;paint-order:stroke fill;text-shadow:3px 3px 0 #e8133a;margin:0;transform:rotate(-2deg)}
+.icon-btn{background:rgba(255,255,255,.1);border:2px solid rgba(255,224,102,.4);color:#ffe066;padding:5px 10px;border-radius:999px;font-size:12px;cursor:pointer;font-family:inherit}
+.hud{background:rgba(0,0,0,.5);border:2px solid #ffe066;border-radius:12px;padding:6px;display:grid;grid-template-columns:1fr 1fr 1fr;text-align:center;font-size:9px;letter-spacing:.1em}
+.hud .v{font-family:"Mochiy Pop P One",sans-serif;font-size:14px;margin-top:2px}
+.hud .lvl{color:#5fc4ff}.hud .hp{color:#ff5577}.hud .combo{color:#ffe066}
+.boss-area{flex:1;min-height:0;background:radial-gradient(circle at 50% 70%,rgba(255,80,80,.25),transparent 70%),#1a0a14;border:3px solid #ffe066;border-radius:14px;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden;cursor:pointer}
+.boss{font-size:clamp(80px,22vw,140px);line-height:1;transition:transform .08s}
+.boss.hit{animation:bossHit .15s}
+@keyframes bossHit{0%{transform:scale(1)}50%{transform:scale(1.1) translate(8px,-4px) rotate(-4deg);filter:brightness(2)}100%{transform:scale(1)}}
+.boss.dead{opacity:.5;filter:grayscale(.5)}
+.hpbar{position:absolute;top:8px;left:8px;right:8px;height:14px;background:rgba(0,0,0,.5);border:2px solid #ffe066;border-radius:999px;overflow:hidden}
+.hpbar .fill{height:100%;background:linear-gradient(90deg,#5dffb4,#ff5577);transition:width .15s}
+.boss-name{position:absolute;top:30px;left:50%;transform:translateX(-50%);font-family:"Mochiy Pop P One",sans-serif;font-size:13px;color:#ffe066;background:rgba(0,0,0,.6);padding:2px 10px;border-radius:999px;border:1.5px solid #ffe066;white-space:nowrap}
+.tap-hint{position:absolute;bottom:14px;left:50%;transform:translateX(-50%);font-family:"Mochiy Pop P One",sans-serif;font-size:14px;color:#fff;text-shadow:0 0 8px #000;opacity:.8;animation:pulse 1s ease-in-out infinite}
+@keyframes pulse{0%,100%{transform:translateX(-50%) scale(1);opacity:.8}50%{transform:translateX(-50%) scale(1.08);opacity:1}}
+.dmg{position:absolute;font-family:"Mochiy Pop P One",sans-serif;font-size:20px;color:#ffe066;-webkit-text-stroke:3px #000;paint-order:stroke fill;text-shadow:2px 2px 0 #e8133a;pointer-events:none;animation:dmgUp .8s ease-out forwards}
+@keyframes dmgUp{0%{opacity:0;transform:translate(-50%,-50%) scale(.6)}20%{opacity:1;transform:translate(-50%,-90%) scale(1.15)}100%{opacity:0;transform:translate(-50%,-180%) scale(.9)}}
+.banner{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none;opacity:0;transition:opacity .2s}
+.banner.show{opacity:1}
+.banner .text{font-family:"Mochiy Pop P One",sans-serif;font-size:clamp(36px,11vw,52px);color:#ffe066;-webkit-text-stroke:5px #000;paint-order:stroke fill;text-shadow:4px 4px 0 #e8133a;animation:bp .6s cubic-bezier(.2,.9,.2,1)}
+@keyframes bp{0%{transform:scale(.3) rotate(-15deg);opacity:0}40%{transform:scale(1.3) rotate(8deg);opacity:1}100%{transform:scale(1) rotate(-3deg);opacity:1}}
+.bottom{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.bottom button{background:#ffe066;color:#000;border:3px solid #000;padding:12px;font-family:"Mochiy Pop P One",sans-serif;font-size:14px;border-radius:14px;cursor:pointer;box-shadow:3px 3px 0 #000}
+.bottom .skill{background:#ff5577;color:#fff}.bottom button:disabled{opacity:.4;cursor:not-allowed}
+.bottom button:active{transform:translate(2px,2px);box-shadow:1px 1px 0 #000}
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.85);display:none;align-items:center;justify-content:center;padding:24px;z-index:100}
+.overlay.show{display:flex}
+.overlay .box{background:linear-gradient(180deg,#3a0010,#08010f);border:4px solid #ffe066;border-radius:16px;padding:22px;text-align:center;max-width:340px;box-shadow:0 0 30px rgba(255,224,102,.6)}
+.overlay h2{margin:0 0 10px;font-size:22px;color:#ffe066;-webkit-text-stroke:2px #000;paint-order:stroke fill;text-shadow:3px 3px 0 #e8133a}
+.overlay p{font-size:11px;line-height:1.7;opacity:.9;margin:6px 0}
+.overlay button{background:#ffe066;color:#000;border:3px solid #000;padding:12px 26px;font-family:"Mochiy Pop P One",sans-serif;font-size:18px;border-radius:999px;cursor:pointer;box-shadow:4px 4px 0 #000;margin-top:8px}
+</style>
+</head>
+<body>
+<div id="app">
+<header><h1 class="title">タップ百人組手</h1><button class="icon-btn" id="btn-mute">🔊</button></header>
+<div class="hud">
+  <div>LV<div class="v lvl" id="lvl">1</div></div>
+  <div>連続<div class="v combo" id="combo">×1</div></div>
+  <div>合計<div class="v hp" id="total">0</div></div>
+</div>
+<div class="boss-area" id="boss-area">
+  <div class="hpbar"><div class="fill" id="hp-fill" style="width:100%"></div></div>
+  <div class="boss-name" id="boss-name">ザコ #1</div>
+  <div class="boss" id="boss">👹</div>
+  <div class="tap-hint">タップ！</div>
+  <div class="banner" id="banner"><div class="text" id="b-text"></div></div>
+</div>
+<div class="bottom">
+  <button class="skill" id="btn-skill" disabled>💥 必殺技</button>
+  <button id="btn-restart">↺ リセット</button>
+</div>
+</div>
+<div class="overlay show" id="start-overlay">
+  <div class="box">
+    <h2>タップ百人組手</h2>
+    <p>画面連打で敵を倒す！100体倒せ。<br/>連続で叩くと <b>コンボ</b> でダメージUP。<br/>必殺ゲージMAXで全体大ダメージ！</p>
+    <button id="btn-start">▶ START</button>
+  </div>
+</div>
+<div class="overlay" id="end-overlay">
+  <div class="box">
+    <h2 id="end-title">クリア！</h2>
+    <p id="end-msg">百人撃破！</p>
+    <p>合計ダメージ <span id="end-dmg">0</span></p>
+    <button id="btn-again">▶ もう一度</button>
+  </div>
+</div>
+<script>
+(()=>{
+'use strict';
+const SHARE_URL='https://maxtakaharu34-cmd.github.io/tap100-jp/';
+const $=(id)=>document.getElementById(id);
+const ENEMIES=['👹','👺','🧟','💀','👻','🤖','🐲','🦂','🐍','🦖','😈','👽'];
+const BOSS=['👑','😈','🐲','💎'];
+const NAMES=['ザコ','弟子','戦士','悪鬼','大将','王','神','てんちょー'];
+const state={lvl:1,bossHp:1,bossMax:1,combo:1,total:0,killCount:0,gauge:0,bossEm:'👹',bossName:'ザコ #1',lastTap:0,over:false,paused:true};
+let ac=null;const en=()=>{if(!ac)ac=new(window.AudioContext||window.webkitAudioContext)();if(ac.state==='suspended')ac.resume();return ac};
+let muted=localStorage.getItem('tap100_muted')==='1';
+const beep=(f,d,t='square',g=.1)=>{if(muted)return;const a=en();const o=a.createOscillator();const gn=a.createGain();o.type=t;o.frequency.value=f;gn.gain.value=g;gn.gain.exponentialRampToValueAtTime(.0001,a.currentTime+d);o.connect(gn).connect(a.destination);o.start();o.stop(a.currentTime+d)};
+$('btn-mute').textContent=muted?'🔇':'🔊';
+$('btn-mute').addEventListener('click',()=>{muted=!muted;localStorage.setItem('tap100_muted',muted?'1':'0');$('btn-mute').textContent=muted?'🔇':'🔊'});
+
+function spawnEnemy(){
+  state.killCount++;
+  const isBoss=state.killCount%10===0;
+  state.lvl=Math.floor(state.killCount/5)+1;
+  state.bossMax=isBoss?(state.lvl*30+30):(state.lvl*5+5);
+  state.bossHp=state.bossMax;
+  if(isBoss){state.bossEm=BOSS[Math.floor(Math.random()*BOSS.length)];state.bossName='ボス '+(NAMES[Math.min(Math.floor(state.killCount/15),NAMES.length-1)])}
+  else{state.bossEm=ENEMIES[Math.floor(Math.random()*ENEMIES.length)];state.bossName=(NAMES[Math.min(Math.floor(state.killCount/15),NAMES.length-1)])+' #'+state.killCount}
+  $('boss').textContent=state.bossEm;$('boss').classList.remove('dead');
+  $('boss-name').textContent=state.bossName;
+  if(state.killCount>=100)return endGame(true);
+  showBanner('NEXT! '+state.bossName,'',700);
+  beep(440,.1,'triangle',.15);
+}
+function showBanner(t,cls,ms=900){
+  $('b-text').textContent=t;
+  $('banner').classList.remove('show');void $('banner').offsetWidth;$('banner').classList.add('show');
+  clearTimeout(showBanner._t);showBanner._t=setTimeout(()=>$('banner').classList.remove('show'),ms);
+}
+function tap(e){
+  if(state.over||state.paused)return;
+  en();
+  // combo
+  const now=Date.now();
+  if(now-state.lastTap<800)state.combo=Math.min(state.combo+1,30);else state.combo=1;
+  state.lastTap=now;
+  const dmg=state.combo+state.lvl;
+  state.bossHp-=dmg;state.total+=dmg;state.gauge=Math.min(100,state.gauge+2);
+  beep(880+state.combo*30,.04,'square',.1);
+  // damage popup
+  if(e){
+    const r=$('boss-area').getBoundingClientRect();
+    const x=(e.clientX||r.left+r.width/2)-r.left;
+    const y=(e.clientY||r.top+r.height/2)-r.top;
+    const d=document.createElement('div');d.className='dmg';d.style.left=x+'px';d.style.top=y+'px';d.textContent='-'+dmg;
+    $('boss-area').appendChild(d);setTimeout(()=>d.remove(),800);
+  }
+  $('boss').classList.remove('hit');void $('boss').offsetWidth;$('boss').classList.add('hit');
+  updateHud();
+  if(state.bossHp<=0)defeat();
+}
+function defeat(){
+  $('boss').classList.add('dead');
+  beep(120,.15,'sawtooth',.18);setTimeout(()=>beep(70,.18,'sawtooth',.18),120);
+  showBanner('撃破！','',600);
+  setTimeout(spawnEnemy,650);
+}
+function useSkill(){
+  if(state.gauge<100||state.over)return;
+  state.gauge=0;
+  const dmg=state.lvl*20+50;
+  state.bossHp-=dmg;state.total+=dmg;
+  showBanner('💥 必殺！ -'+dmg,'',1000);
+  [220,330,440,660,880,1320].forEach((f,i)=>setTimeout(()=>beep(f,.12,'triangle',.18),i*60));
+  $('boss').classList.remove('hit');void $('boss').offsetWidth;$('boss').classList.add('hit');
+  updateHud();
+  if(state.bossHp<=0)defeat();
+}
+function updateHud(){
+  $('lvl').textContent=state.lvl;
+  $('combo').textContent='×'+state.combo;
+  $('total').textContent=state.total;
+  $('hp-fill').style.width=Math.max(0,state.bossHp/state.bossMax*100)+'%';
+  $('btn-skill').disabled=state.gauge<100;
+  $('btn-skill').textContent=state.gauge>=100?'💥 必殺技MAX!':'💥 ゲージ '+Math.floor(state.gauge)+'%';
+}
+function start(){
+  state.killCount=0;state.lvl=1;state.combo=1;state.total=0;state.gauge=0;state.over=false;state.paused=false;
+  spawnEnemy();
+}
+function endGame(){
+  state.over=true;
+  $('end-title').textContent='100体撃破！';
+  $('end-msg').textContent='てんちょー級の腕力！';
+  $('end-dmg').textContent=state.total;
+  $('end-overlay').classList.add('show');
+  [523,659,784,1047,1318,1568].forEach((f,i)=>setTimeout(()=>beep(f,.18,'triangle',.2),i*100));
+}
+$('boss-area').addEventListener('click',tap);
+$('btn-skill').addEventListener('click',useSkill);
+$('btn-start').addEventListener('click',()=>{$('start-overlay').classList.remove('show');en();start()});
+$('btn-again').addEventListener('click',()=>{$('end-overlay').classList.remove('show');start()});
+$('btn-restart').addEventListener('click',()=>{if(confirm('リセット？'))start()});
+// Combo decay
+setInterval(()=>{if(Date.now()-state.lastTap>900)state.combo=1;updateHud()},200);
+})();
+</script>
+</body>
+</html>
